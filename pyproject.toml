@@ -1,0 +1,15 @@
+[project]
+name = "mapworld"
+version = "0.0.2"
+authors = [
+  { name="Kushal Koshti", email="kushalkoshti9@gmail.com" },
+]
+description = "A small example package"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+

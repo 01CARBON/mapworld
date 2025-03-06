@@ -1,2 +1,5 @@
-# mapworld
-Environment to evaluate Chat Optimized Large Language Models in a multimodal navigation setting
+# Example Package
+
+This is a simple example package. You can use
+[GitHub-flavored Markdown](https://guides.github.com/features/mastering-markdown/)
+to write your content.
