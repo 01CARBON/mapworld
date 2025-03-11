@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
 
 class AbstractMap(object):
     dir2delta = {'n': np.array((-1, 0)),
@@ -38,10 +39,12 @@ class AbstractMap(object):
 
     def plot_graph(self):
         nx.draw_networkx(self.G, pos={n: n for n in self.G.nodes()})
+        plt.show()
 
     def __repr__(self):
         return '<AbstractMap({}, {}, {})>'.format(self.n, self.m, self.n_rooms)
     
 if __name__ == "__main__":
     map = AbstractMap(3, 3, 9)
+    print(map.n)
     map.plot_graph()
