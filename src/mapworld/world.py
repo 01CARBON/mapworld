@@ -35,31 +35,56 @@ class BaseMap:
             'w': np.array([-1, 0])
         }
 
-    def create_cycle():
-        pass
-        
-    def generate_graph(self):
-        """ Return a networkx based 2-D graph, based on the initialized parameters """
-        G = nx.Graph()
-        map_grid = np.zeros((self.m, self.n))
+        """ 
+        Create a cycle starting from the current node, depending on the size. 
+        Example for a 3x3 graph, and size of 2,
 
-        # Select a random point in the Graph to create a room/node
-        # Use this as the start_position to build the graph
-        current_position = np.random.randint(0, self.m),  np.random.randint(0, self.n)
+
+        Possible solutions - 
+        1) Create grpah, check cycle, add/remove cycle
+        2) Create specific cyclic and acyclic graphs?? 
+        
+        Going with 2) option
+        """
+
+    def create_acyclic_graph(self, current_position: np.array = [0,0], G = None ):
+        """
+        Create an Acyclic graph
+        """
+        
+        visited = set()
+        map_grid = np.zeros((self.m, self.n))
+        
         G.add_node(current_position)
         map_grid[current_position] = 1
+        visited.add(tuple(current_position))
 
         while map_grid.sum() < self.n_rooms:
             random_step = np.random.choice(['n', 's', 'e', 'w'])
             step_delta = self.dir_to_delta[random_step]
             next_position = tuple(current_position + step_delta)
-            if min(next_position) < 0 or next_position[0] >= self.m or next_position[1] >= self.n:
-                continue # Out of bounds position / Illegal move
+            if min(next_position) < 0 or next_position[0] >= self.m or next_position[1] >= self.n or next_position in visited:
+                continue # Out of bounds position / Illegal move / Forming a cycle
                             
             map_grid[next_position] = 1
             G.add_node(next_position)
             G.add_edge(current_position, next_position) 
             current_position = next_position
+
+        return G
+
+    def create_cyclic_graph(self, current_position: np.array = [0,0], G = None):
+        pass
+
+    def generate_graph(self):
+        """ Return a networkx based 2-D graph, based on the initialized parameters """
+        G = nx.Graph()
+        
+        # Select a random point in the Graph to create a room/node
+        # Use this as the start_position to build the graph
+        current_position = np.random.randint(0, self.m),  np.random.randint(0, self.n)
+
+        G = self.create_acyclic_graph(current_position, G)
 
         return G
 
