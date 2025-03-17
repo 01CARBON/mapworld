@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class BaseMap:
 
@@ -34,18 +34,7 @@ class BaseMap:
             'e': np.array([1, 0]),
             'w': np.array([-1, 0])
         }
-
-        """ 
-        Create a cycle starting from the current node, depending on the size. 
-        Example for a 3x3 graph, and size of 2,
-
-
-        Possible solutions - 
-        1) Create grpah, check cycle, add/remove cycle
-        2) Create specific cyclic and acyclic graphs?? 
         
-        Going with 2) option
-        """
 
     def create_acyclic_graph(self, current_position: np.array = [0,0], G = None ):
         """
@@ -73,8 +62,30 @@ class BaseMap:
 
         return G
 
-    def create_cyclic_graph(self, current_position: np.array = [0,0], G = None):
-        pass
+    def create_cyclic_graph(self, current_position: np.array = [0,0], G = None, min_loops: int = 1):
+        """
+        Create an Acyclic graph
+        """
+
+        map_grid = np.zeros((self.m, self.n))
+        
+        G.add_node(current_position)
+        map_grid[current_position] = 1
+
+        while map_grid.sum() < self.n_rooms or len(nx.cycle_basis(G)) < min_loops:
+            print(nx.cycle_basis(G))
+            random_step = np.random.choice(['n', 's', 'e', 'w'])
+            step_delta = self.dir_to_delta[random_step]
+            next_position = tuple(current_position + step_delta)
+            if min(next_position) < 0 or next_position[0] >= self.m or next_position[1] >= self.n:
+                continue # Out of bounds position / Illegal move / Forming a cycle
+                            
+            map_grid[next_position] = 1
+            G.add_node(next_position)
+            G.add_edge(current_position, next_position) 
+            current_position = next_position
+
+        return G
 
     def generate_graph(self):
         """ Return a networkx based 2-D graph, based on the initialized parameters """
@@ -84,11 +95,17 @@ class BaseMap:
         # Use this as the start_position to build the graph
         current_position = np.random.randint(0, self.m),  np.random.randint(0, self.n)
 
-        G = self.create_acyclic_graph(current_position, G)
+        # G = self.create_acyclic_graph(current_position, G)
+        G = self.create_cyclic_graph(current_position, G)
 
         return G
 
+    def plot_graph(self, G):
+        nx.draw_networkx(G, pos={n: n for n in G.nodes()})
+        plt.show()
+
 if __name__ == '__main__':
-    map = BaseMap(3, 3, 5, False)
+    map = BaseMap(3, 3, 9, False)
     G = map.generate_graph()
-    print(G)
+    map.plot_graph(G)
+    
