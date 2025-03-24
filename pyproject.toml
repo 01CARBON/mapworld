@@ -1,10 +1,10 @@
 [project]
 name = "mapworld"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
   { name="Kushal Koshti", email="kushalkoshti9@gmail.com" },
 ]
-description = "A small example package"
+description = "A package to build a 2-D graph based environment called 'mapworld' for VLN tasks"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
