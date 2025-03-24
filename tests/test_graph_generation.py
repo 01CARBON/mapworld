@@ -1,4 +1,4 @@
-from src.mapworld.world import BaseMap
+from src.mapworld.maps import BaseMap
 from tqdm import tqdm
 import logging
 
