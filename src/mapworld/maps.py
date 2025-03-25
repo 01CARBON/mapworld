@@ -5,33 +5,26 @@ import matplotlib.pyplot as plt
 
 class BaseMap:
 
-    def __init__(self, m: int = 3, n: int = 3, n_rooms: int = 9):
+    def __init__(self, m: int = 3, n: int = 3, n_nodes: int = 9):
         """ 
         Set up a base 2-D graph, assign cycles in the graph if required 
         
         Args:
             m: Number of rows in the graph.
             n: Number of columns in the graph
-            n_rooms: Required number of rooms. Should be less than n*m
+            n_nodes: Required number of nodes. Should be less than n*m
 
         Raises:
             ValueError: If any value is unset
-            AssertionError: If `n_rooms` > `n*m`
+            AssertionError: If `n_nodes` > `n*m`
         """
-        if not m or not n or not n_rooms:
-            raise ValueError(f"One of the values passed - m : {m}, n: {n}, n_rooms: {n_rooms} is not set. (n,m,n_rooms) >= 1")
-        assert n_rooms <= m*n, "Number of Rooms cannot exceed grid size"
+        if not m or not n or not n_nodes:
+            raise ValueError(f"One of the values passed - m : {m}, n: {n}, n_nodes: {n_nodes} is not set. (n,m,n_nodes) >= 1")
+        assert n_nodes <= m*n, "Number of nodes cannot exceed grid size"
 
         self.m = m
         self.n = n
-        self.n_rooms = n_rooms
-        self.dir_to_delta = {
-            'n': np.array([0,1]), # x, y co-ordinate system
-            's': np.array([0,-1]),
-            'e': np.array([1, 0]),
-            'w': np.array([-1, 0])
-        }
-        
+        self.n_nodes = n_nodes
 
     @staticmethod
     def get_valid_neighbors(current_pos: np.array = [0,0], visited: list = [], m: int = 3, n: int = 3):
@@ -56,6 +49,9 @@ class BaseMap:
 
         Args:
             current_node: A random starting node for creating the graph
+        
+        Returns:
+            G: A networkx acyclic graph with (n_nodes-1) edges
         """
         G = nx.Graph()
         visited = set()
@@ -66,7 +62,7 @@ class BaseMap:
         visited.add(tuple(current_node))
         G.add_node(tuple(current_node))
 
-        while len(visited) < self.n_rooms:
+        while len(visited) < self.n_nodes:
             current_node = tracker[-1]
             neighbors = self.get_valid_neighbors(current_node, visited, self.m, self.n)
             if neighbors:
@@ -89,6 +85,9 @@ class BaseMap:
 
         Args:
             n_loops: Number of loops (cycles) required in the graph.
+        
+        Returns:
+            loop_graph: A networkx graph containing n_loops cycles.
 
         Raises:
             ValueError: If parameters are invalid or a valid configuration cannot be found.
@@ -101,10 +100,10 @@ class BaseMap:
                 "1-D graph is being passed. Please use a 2-D grid with m, n >= 2 to create a cyclic graph."
             )
 
-        if self.n_rooms < n_loops + 3:
+        if self.n_nodes < n_loops + 3:
             raise ValueError(
-                f"At least {n_loops + 3} rooms are required to form {n_loops} loops."
-                f" Rooms provided: {self.n_rooms}. Increase n_rooms or reduce n_loops."
+                f"At least {n_loops + 3} nodes are required to form {n_loops} loops."
+                f" nodes provided: {self.n_nodes}. Increase n_nodes or reduce n_loops."
             )
 
         max_attempts = 10
@@ -160,6 +159,9 @@ class BaseMap:
     def plot_graph(self, G):
         nx.draw_networkx(G, pos={n: n for n in G.nodes()})
         plt.show()
+
+    def __repr__(self) -> str:
+        return f"<BaseMap({self.m}, {self.n}, {self.n_nodes})>"
 
 if __name__ == '__main__':
 
