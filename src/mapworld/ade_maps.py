@@ -2,6 +2,9 @@ from src.mapworld.maps import BaseMap
 import os
 import json
 import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
+import ast
 
 class ADEMap(BaseMap):
 
@@ -143,6 +146,116 @@ class ADEMap(BaseMap):
         # Or "s/street" should be strictly between "g/garage" and a category from "sports_and_leisure" or "transportation" etc..
 
         return G
+    
+
+    def print_mapping(self, G):
+        """
+        Print a mapping of node: room_type - image_url for all nodes in the graph
+        """
+        for this_node in G.nodes():
+            print('{}: {} - {:>50}'.format(this_node,
+                                         G.nodes[this_node]['type'],
+                                         G.nodes[this_node]['image']))
+            
+    def plot_graph(self, G):
+        node_labels = {node: G.nodes[node]['type'] for node in G.nodes()}
+        pos = {n: n for n in G.nodes()}
+
+        nx.draw_networkx_nodes(G, pos, node_shape='s', node_color='blue')
+        nx.draw_networkx_edges(G, pos)
+        
+        # Adjust label positions slightly
+        label_pos = {k: (v[0], v[1] + 0.2) for k, v in pos.items()}
+        nx.draw_networkx_labels(G, label_pos, labels=node_labels, font_size=10)
+
+        plt.axis('off')
+        plt.show()
+        
+    def plot_agent_graph(self, G, agent_pos, target_pos):
+        """
+        BUG - Fails when no outdoor room is present in the graph...
+
+        Plot a graph showing locations of agent position and target room
+
+        Args:
+            G: networkx type graph
+            agent_pos = Current positon of Agent - [x,y]/node
+            target_pos = Position of Target room - [x,y]/node
+        """
+        node_labels = {node: G.nodes[node]['type'] for node in G.nodes()}
+        pos = {n: n for n in G.nodes()}
+
+        nx.draw_networkx_nodes(G, pos, node_shape='s', node_color='lightblue')
+        nx.draw_networkx_edges(G, pos)
+
+        label_pos = {k: (v[0], v[1] + 0.2) for k, v in pos.items()}
+        nx.draw_networkx_labels(G, label_pos, labels=node_labels, font_size=10)
+
+        # Draw custom agent and target nodes over main graph
+        nx.draw_networkx_nodes(G, pos, nodelist=[agent_pos], node_color='blue', node_shape='o', node_size=300)
+        nx.draw_networkx_nodes(G, pos, nodelist=[target_pos], node_color='black', node_shape='s', node_size=600)
+
+        custom_labels = {
+            agent_pos: "agent",
+            target_pos: "target"
+        }
+        custom_label_pos = {k: (v[0], v[1] - 0.2) for k, v in pos.items() if k in custom_labels}
+        nx.draw_networkx_labels(G, custom_label_pos, labels=custom_labels, font_size=9, font_color='black')
+
+        plt.axis('off')
+        plt.show()
+
+    def to_fsa_def(self, G):
+        """
+        Finite State Automata I guess, with transitions and states(nodes?)...
+        returns transitions, states, initialpos, initial_room_type
+        """
+
+        transitions = []
+        graph_nodes = []
+
+        for source in G.nodes():
+            for dest in G.nodes():
+                if (source[0]+1, source[1]) == dest:
+                    transitions.append(
+                        {
+                            'source': str(source),
+                            'dest': str(dest),
+                            'trigger': 'e'
+                        }
+                    )
+                elif (source[0]-1, source[1]) == dest:
+                    transitions.append(
+                        {
+                            'source': str(source),
+                            'dest': str(dest),
+                            'trigger': 'w'
+                        }
+                    )
+                elif (source[0], source[1]+1) == dest:
+                    transitions.append(
+                        {
+                            'source': str(source),
+                            'dest': str(dest),
+                            'trigger': 'n'
+                        }
+                    )
+                elif (source[0], source[1]-1) == dest:
+                    transitions.append(
+                        {
+                            'source': str(source),
+                            'dest': str(dest),
+                            'trigger': 's'
+                        }
+                    )
+            G.nodes[source]['id'] = source
+            graph_nodes.append(G.nodes[source])
+
+        initial_node = np.random.choice([str(n) for n in G.nodes()])
+        initial_type = G.nodes[ast.literal_eval(initial_node)]['type']
+        
+        return {'transitions': transitions, 'nodes': graph_nodes,
+                'initial': str(ast.literal_eval(initial_node)), 'initial_type': initial_type} # 'initial' in str format and not np.str...ref - https://github.com/clp-research/sempix/blob/master/03_Tasks/MapWorld/maps.py
 
 if __name__ == '__main__':
 
@@ -150,12 +263,11 @@ if __name__ == '__main__':
     G = ademap.create_cyclic_graph(2)
     G = ademap.assign_types(G, ambiguity=[2,2])
     G = ademap.assign_images(G)
+    # ademap.plot_graph(G)
+    # ademap.plot_agent_graph(G)
 
-    nodes = G.nodes()
-    for n in nodes:
-        print(G.nodes[n])
-
-
+    tr = ademap.to_fsa_def(G)
+    print(tr)
 
 
 

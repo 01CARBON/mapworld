@@ -1,6 +1,6 @@
 [project]
 name = "mapworld"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Kushal Koshti", email="kushalkoshti9@gmail.com" },
 ]

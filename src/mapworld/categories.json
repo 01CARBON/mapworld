@@ -21,7 +21,7 @@
         "waiting_room",
         "balcony__interior"
     ],
-    "distractors": [
+    "outdoors": [
         "garage__outdoor",
         "apartment_building__outdoor",
         "jacuzzi__outdoor",
@@ -49,7 +49,7 @@
         "street",
         "yard"
     ],
-    "outdoors": [
+    "distractors": [
         "home_theater",
         "storage_room",
         "hotel_room",
