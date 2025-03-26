@@ -97,14 +97,27 @@ class ADEMap(BaseMap):
                 G.nodes[room]['target'] = True
 
         # Remaining nodes - as distractors
-        print(set(indoor_rooms) - set(indoor_rooms_assigned))    
+        distractor_rooms = list(set(indoor_rooms) - set(indoor_rooms_assigned))
+
+        # Collect remaining room_types from targets and aa categories["distractors"] to it
+        dist_categories = list(set(categories["targets"]) - set(room_type_assigned) | set(categories["distractors"]))
+
+        distractor_assigned = []
+        for room in distractor_rooms:
+            random_distractor = np.random.choice(dist_categories)
+            while random_distractor in distractor_assigned:
+                random_distractor = np.random.choice(dist_categories)
+            
+            G.nodes[room]['base_type'] = "indoor"
+            G.nodes[room]['type'] = random_distractor
+            G.nodes[room]['target'] = False
 
         return G
 
 if __name__ == '__main__':
 
-    ademap = ADEMap(3, 3, 5)
-    G = ademap.create_cyclic_graph(1)
+    ademap = ADEMap(4, 4, 10)
+    G = ademap.create_cyclic_graph(2)
     G = ademap.assign_types(G, ambiguity=[2,2])
 
     nodes = G.nodes()
