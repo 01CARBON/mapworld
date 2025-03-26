@@ -113,6 +113,36 @@ class ADEMap(BaseMap):
             G.nodes[room]['target'] = False
 
         return G
+    
+    def assign_images(self, G, json_path: str = os.path.join("src", "mapworld", "img_instances.json")):
+        """
+        Assign Images from ADE20k dataset to a graph whose nodes have already been assigned a specific room type
+
+        Args:
+            G: networkx type graph containing node info - {type, base_type, target}
+            json_path: Path to a jsonn file containing mappping of room_types to various images
+
+        Return:
+            G: updated networkx graph with randomly assigned image of a specific room_type
+        """
+
+        with open(json_path, 'r') as f:
+            json_data = json.load(f)
+
+        images_assigned = []
+        for node in G.nodes():
+            room_type = G.nodes[node]['type']
+            random_image = np.random.choice(json_data[room_type])
+            while random_image in images_assigned:
+                random_image = np.random.choice(json_data[room_type])
+            
+            G.nodes[node]['image'] = random_image
+
+        #TODO: ADE20k categories are well-defined. Can make MapWorld with real-world constraints
+        # Maybe add constraints like "h/hallway" should be in between nodes of "indoor/targets" etc..
+        # Or "s/street" should be strictly between "g/garage" and a category from "sports_and_leisure" or "transportation" etc..
+        
+        return G
 
 if __name__ == '__main__':
 
