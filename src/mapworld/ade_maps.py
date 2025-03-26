@@ -114,7 +114,7 @@ class ADEMap(BaseMap):
 
         return G
     
-    def assign_images(self, G, json_path: str = os.path.join("src", "mapworld", "img_instances.json")):
+    def assign_images(self, G, json_path: str = os.path.join("src", "mapworld", "images.json")):
         """
         Assign Images from ADE20k dataset to a graph whose nodes have already been assigned a specific room type
 
@@ -141,7 +141,7 @@ class ADEMap(BaseMap):
         #TODO: ADE20k categories are well-defined. Can make MapWorld with real-world constraints
         # Maybe add constraints like "h/hallway" should be in between nodes of "indoor/targets" etc..
         # Or "s/street" should be strictly between "g/garage" and a category from "sports_and_leisure" or "transportation" etc..
-        
+
         return G
 
 if __name__ == '__main__':
@@ -149,6 +149,7 @@ if __name__ == '__main__':
     ademap = ADEMap(4, 4, 10)
     G = ademap.create_cyclic_graph(2)
     G = ademap.assign_types(G, ambiguity=[2,2])
+    G = ademap.assign_images(G)
 
     nodes = G.nodes()
     for n in nodes:
