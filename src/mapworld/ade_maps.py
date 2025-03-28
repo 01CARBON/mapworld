@@ -79,6 +79,10 @@ class ADEMap(BaseMap):
     
         # TODO: Pass 'type' as argument as well, to pre set certain type of rooms
         # atleast 2 home_office and 2 bedrooms, for example
+
+        # TODO: Fix ambiguity = None case
+        if not ambiguity:
+            ambiguity = [1]
         
         indoor_rooms_assigned = []
         room_type_assigned = []
@@ -257,10 +261,17 @@ class ADEMap(BaseMap):
         return {'transitions': transitions, 'nodes': graph_nodes,
                 'initial': str(ast.literal_eval(initial_node)), 'initial_type': initial_type} # 'initial' in str format and not np.str...ref - https://github.com/clp-research/sempix/blob/master/03_Tasks/MapWorld/maps.py
 
+    def metadata(self, G):
+        """
+        Get metadata related to the Grpah (specifically for textmapworld rightnow...)
+        """
+
+        pass
+    
 if __name__ == '__main__':
 
     ademap = ADEMap(4, 4, 10)
-    G = ademap.create_cyclic_graph(2)
+    G = ademap.create_acyclic_graph()
     G = ademap.assign_types(G, ambiguity=[2,2])
     G = ademap.assign_images(G)
     # ademap.plot_graph(G)

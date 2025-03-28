@@ -43,12 +43,9 @@ class BaseMap:
         return valid_neighbors
 
 
-    def create_acyclic_graph(self, current_node: np.array = [0,0]):
+    def create_acyclic_graph(self):
         """
         Create an Acyclic graph
-
-        Args:
-            current_node: A random starting node for creating the graph
         
         Returns:
             G: A networkx acyclic graph with (n_nodes-1) edges
@@ -56,8 +53,9 @@ class BaseMap:
         G = nx.Graph()
         visited = set()
         tracker = []
-
+        
         # Pick a random node from the grid
+        current_node = (np.random.randint(self.m), np.random.randint(self.n))
         tracker.append(current_node)
         visited.add(tuple(current_node))
         G.add_node(tuple(current_node))
@@ -166,6 +164,6 @@ class BaseMap:
 if __name__ == '__main__':
 
     map = BaseMap(2, 8, 10)
-    G = map.create_cyclic_graph(5)
+    G = map.create_acyclic_graph()
     map.plot_graph(G)
     
