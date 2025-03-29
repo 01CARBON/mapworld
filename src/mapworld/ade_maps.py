@@ -220,38 +220,39 @@ class ADEMap(BaseMap):
 
         for source in G.nodes():
             for dest in G.nodes():
-                if (source[0]+1, source[1]) == dest:
-                    transitions.append(
-                        {
-                            'source': str(source),
-                            'dest': str(dest),
-                            'trigger': 'e'
-                        }
-                    )
-                elif (source[0]-1, source[1]) == dest:
-                    transitions.append(
-                        {
-                            'source': str(source),
-                            'dest': str(dest),
-                            'trigger': 'w'
-                        }
-                    )
-                elif (source[0], source[1]+1) == dest:
-                    transitions.append(
-                        {
-                            'source': str(source),
-                            'dest': str(dest),
-                            'trigger': 'n'
-                        }
-                    )
-                elif (source[0], source[1]-1) == dest:
-                    transitions.append(
-                        {
-                            'source': str(source),
-                            'dest': str(dest),
-                            'trigger': 's'
-                        }
-                    )
+                if (source, dest) in G.edges():
+                    if (source[0]+1, source[1]) == dest:
+                        transitions.append(
+                            {
+                                'source': str(source),
+                                'dest': str(dest),
+                                'trigger': 'east'
+                            }
+                        )
+                    elif (source[0]-1, source[1]) == dest:
+                        transitions.append(
+                            {
+                                'source': str(source),
+                                'dest': str(dest),
+                                'trigger': 'west'
+                            }
+                        )
+                    elif (source[0], source[1]+1) == dest:
+                        transitions.append(
+                            {
+                                'source': str(source),
+                                'dest': str(dest),
+                                'trigger': 'north'
+                            }
+                        )
+                    elif (source[0], source[1]-1) == dest:
+                        transitions.append(
+                            {
+                                'source': str(source),
+                                'dest': str(dest),
+                                'trigger': 'south'
+                            }
+                        )
             G.nodes[source]['id'] = source
             graph_nodes.append(G.nodes[source])
 
@@ -266,19 +267,64 @@ class ADEMap(BaseMap):
         Get metadata related to the Grpah (specifically for textmapworld rightnow...)
         """
 
-        pass
-    
+        # graph_id 
+        graph_id = ""
+        node_names = []
+        node_mapping = {}
+        for node in G.nodes():
+            node_name = G.nodes[node]['type']
+            node_name = " ".join(node_name.split("__"))
+            node_name = " ".join(node_name.split("_"))
+            node_name = node_name.capitalize()
+            graph_id += str(list(node)[0]) + str(list(node)[1]) + node_name[0].lower()
+            node_names.append(node_name)
+            node_mapping[node] = node_name
+        
+        named_edges = []
+        for edge in G.edges():
+            named_edge = []
+            for n in edge:
+                named_edge.append(node_mapping[n])
+            named_edges.append(tuple(named_edge))
+
+        fsa_def = self.to_fsa_def(G)
+        transitions = fsa_def["transitions"]
+        print(transitions)
+        directions = {}
+        for tr in transitions:
+            node_val = ast.literal_eval(tr['source'])
+            node_name = node_mapping[node_val]
+
+            if node_name in directions:
+                if tr['trigger'] not  in directions[node_name]:
+                    directions[node_name].append(tr['trigger'])
+            else:
+                directions[node_name] = [tr['trigger']]
+
+
+        
+        graph_metadata = {
+            "graph_id": graph_id, 
+            "m": self.m,
+            "n": self.n,
+            "graph_nodes": node_names,
+            "graph_edges": named_edges,
+            "directions": directions # A collection of valid directions for each node, i.e. what possible directions can an agent move given its current room/node 
+        }
+
+        return graph_metadata
+
 if __name__ == '__main__':
 
     ademap = ADEMap(4, 4, 10)
     G = ademap.create_acyclic_graph()
     G = ademap.assign_types(G, ambiguity=[2,2])
     G = ademap.assign_images(G)
-    # ademap.plot_graph(G)
+    
     # ademap.plot_agent_graph(G)
 
-    tr = ademap.to_fsa_def(G)
+    tr = ademap.metadata(G)
     print(tr)
-
+    ademap.plot_graph(G)
 
 
