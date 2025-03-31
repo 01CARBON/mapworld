@@ -43,7 +43,7 @@ class BaseMap:
         return valid_neighbors
 
 
-    def create_acyclic_graph(self):
+    def create_acyclic_graph(self, current_node=None):
         """
         Create an Acyclic graph
         
@@ -55,7 +55,9 @@ class BaseMap:
         tracker = []
         
         # Pick a random node from the grid
-        current_node = (np.random.randint(self.m), np.random.randint(self.n))
+        if not current_node:
+            current_node = (np.random.randint(self.m), np.random.randint(self.n))
+        
         tracker.append(current_node)
         visited.add(tuple(current_node))
         G.add_node(tuple(current_node))

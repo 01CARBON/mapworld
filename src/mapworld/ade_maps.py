@@ -1,4 +1,4 @@
-from src.mapworld.maps import BaseMap
+from mapworld.maps import BaseMap
 import os
 import json
 import numpy as np
@@ -24,7 +24,7 @@ class ADEMap(BaseMap):
         super().__init__(m, n, n_rooms)
 
     
-    def assign_types(self, G, json_path: str = os.path.join("src", "mapworld", "categories.json"), ambiguity: list[int] = [1]):
+    def assign_types(self, G, json_path: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "categories.json"), ambiguity: list[int] = [1]):
         """
         Assign room categories and images to the nodes in the generated graph.
         Example G.nodes[room] = {
@@ -121,7 +121,7 @@ class ADEMap(BaseMap):
 
         return G
     
-    def assign_images(self, G, json_path: str = os.path.join("src", "mapworld", "images.json")):
+    def assign_images(self, G, json_path: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images.json")):
         """
         Assign Images from ADE20k dataset to a graph whose nodes have already been assigned a specific room type
 
@@ -272,6 +272,7 @@ class ADEMap(BaseMap):
         node_names = []
         node_mapping = {}
         for node in G.nodes():
+            print(G.nodes[node])
             node_name = G.nodes[node]['type']
             node_name = " ".join(node_name.split("__"))
             node_name = " ".join(node_name.split("_"))
@@ -289,28 +290,45 @@ class ADEMap(BaseMap):
 
         fsa_def = self.to_fsa_def(G)
         transitions = fsa_def["transitions"]
-        print(transitions)
+
         directions = {}
+        moves = {}
         for tr in transitions:
             node_val = ast.literal_eval(tr['source'])
             node_name = node_mapping[node_val]
 
+            # For directions
             if node_name in directions:
-                if tr['trigger'] not  in directions[node_name]:
+                if tr['trigger'] not in directions[node_name]:
                     directions[node_name].append(tr['trigger'])
             else:
                 directions[node_name] = [tr['trigger']]
 
-
+            # For moves
+            dest_val = ast.literal_eval(tr['dest'])
+            dest_name = node_mapping[dest_val]
+            if node_name in moves:
+                moves[node_name].append((tr['trigger'], dest_name))
+            else:
+                moves[node_name] = [(tr['trigger'], dest_name)]
         
+        """
+        BUG: Appends directions of ambiguous rooms to a single key
+        Example - locaker_room_1 -> east, locker_room_2 -> north
+        Is saved as {'locker_room': ['east', 'north']}
+        Testing with ambiguity = [1] for now
+        """
+
         graph_metadata = {
             "graph_id": graph_id, 
             "m": self.m,
             "n": self.n,
             "graph_nodes": node_names,
             "graph_edges": named_edges,
-            "directions": directions # A collection of valid directions for each node, i.e. what possible directions can an agent move given its current room/node 
-        }
+            "directions": directions, 
+            "moves": moves,
+            "mapping": node_mapping
+        }   
 
         return graph_metadata
 
@@ -318,7 +336,7 @@ if __name__ == '__main__':
 
     ademap = ADEMap(4, 4, 10)
     G = ademap.create_acyclic_graph()
-    G = ademap.assign_types(G, ambiguity=[2,2])
+    G = ademap.assign_types(G, ambiguity=[1])
     G = ademap.assign_images(G)
     
     # ademap.plot_agent_graph(G)
